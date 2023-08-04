@@ -12,7 +12,7 @@ export const jwtStrategy = new Strategy(
     try {
       const user = await prisma.user.findUnique({
         where: {
-          id: jwtPayload.id, // TODO change to sub?
+          id: jwtPayload.id,
         },
       });
 
@@ -20,7 +20,14 @@ export const jwtStrategy = new Strategy(
         return done(null, false);
       }
 
-      return done(null, user);
+      const expressUserContext = {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        username: user.username,
+      };
+
+      return done(null, expressUserContext);
     } catch (e) {
       return done(e);
     }
