@@ -21,7 +21,9 @@ export const localStrategy = new Strategy(
         return done(null, false, { message: "invalid credentials" });
       }
 
-      if (!compare(password, user.password)) {
+      const isEqual = await compare(password, user.password);
+
+      if (!isEqual) {
         return done(null, false, { message: "invalid credentials" });
       }
 
