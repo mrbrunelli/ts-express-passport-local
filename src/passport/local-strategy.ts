@@ -1,4 +1,5 @@
 import { IStrategyOptions, Strategy } from "passport-local";
+import { compare } from "../bcrypt/compare";
 import { prisma } from "../database/prisma";
 
 const strategyOptions: IStrategyOptions = {
@@ -13,7 +14,6 @@ export const localStrategy = new Strategy(
       const user = await prisma.user.findUnique({
         where: {
           username,
-          password,
         },
       });
 
@@ -21,7 +21,20 @@ export const localStrategy = new Strategy(
         return done(null, false, { message: "invalid credentials" });
       }
 
-      return done(null, user, { message: "logged in successfully" });
+      if (!compare(password, user.password)) {
+        return done(null, false, { message: "invalid credentials" });
+      }
+
+      const expressUserContext = {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        username: user.username,
+      };
+
+      return done(null, expressUserContext, {
+        message: "logged in successfully",
+      });
     } catch (e) {
       return done(e);
     }
