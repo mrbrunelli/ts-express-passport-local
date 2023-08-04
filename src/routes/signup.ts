@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { hash } from "../bcrypt/hash";
 import { prisma } from "../database/prisma";
+import { HttpError } from "../errors/http-error";
 
 const router = Router();
 
@@ -15,7 +16,7 @@ router.post("/", async (req, res, next) => {
     });
 
     if (hasUser) {
-      return res.status(409).send();
+      throw HttpError.conflict();
     }
 
     const hashedPassword = await hash(password);

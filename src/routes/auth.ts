@@ -1,29 +1,31 @@
 import { Router } from "express";
 import jwt from "jsonwebtoken";
 import passport from "passport";
+import { HttpError } from "../errors/http-error";
 
 const router = Router();
 
-router.post("/login/password", (req, res) => {
+router.post("/login/password", (req, res, next) => {
   passport.authenticate(
     "local",
     { session: false },
     (error: any, user: any, info: any) => {
-      if (error || !user) {
-        return res.status(400).json({
-          message: "something is wrong",
-          user,
-        });
-      }
-
-      req.login(user, { session: false }, (error) => {
-        if (error) {
-          res.send(error);
+      try {
+        if (error || !user) {
+          throw HttpError.unauthorized(info.message);
         }
 
-        const token = jwt.sign(user, String(process.env.JWT_SECRET));
-        return res.json({ user, token });
-      });
+        req.login(user, { session: false }, (error) => {
+          if (error) {
+            throw HttpError.unauthorized();
+          }
+
+          const token = jwt.sign(user, String(process.env.JWT_SECRET));
+          return res.json({ user, token });
+        });
+      } catch (e) {
+        next(e);
+      }
     }
   )(req, res);
 });
